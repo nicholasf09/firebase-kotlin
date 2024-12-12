@@ -47,16 +47,34 @@ class MainActivity : AppCompatActivity() {
          lvAdapter = SimpleAdapter(
              this, data, android.R.layout.simple_list_item_2, arrayOf<String>("Pro", "Ibu"), intArrayOf(android.R.id.text1, android.R.id.text2))
         _lvData.adapter = lvAdapter
+        _lvData.setOnItemLongClickListener { parent, view, position, id ->
+            val namaPro = data[position]["Pro"]
+            if(namaPro != null) {
+                db.collection("tbProvinsi")
+                    .document(namaPro)
+                    .delete()
+                    .addOnSuccessListener {
+                        Log.d("Firebase", "Berhasil diHAPUS")
+                        readData(db)
+                    }
+                    .addOnFailureListener { e ->
+                        Log.w("Firebase", e.message.toString())
+                    }
+            }
+            true
+        }
         readData(db)
     }
     fun tambahData(db: FirebaseFirestore, Provinsi: String, Ibukota: String) {
         val dataBaru = daftarProvinsi(Provinsi, Ibukota)
         db.collection("tbProvinsi")
-            .add(dataBaru)
+            .document(dataBaru.provinsi)
+            .set(dataBaru)
             .addOnSuccessListener {
                 _etProvinsi.setText("")
                 _etIbukota.setText("")
                 Log.d("Firebase", "Data Berhasil Disimpan")
+                readData(db)
             }
             .addOnFailureListener {
                 Log.d("Firebase", it.message.toString())
